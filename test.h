@@ -73,76 +73,90 @@ void *threadfunc(void *parm);
 // }
 void set_priority(){
 
-  param[0].sched_priority = 110; 
-  param[1].sched_priority = 99; // " "
-  param[2].sched_priority = 0; // " "
-  param[3].sched_priority = 78; // " "
-  param[4].sched_priority = 65;
 
-  int error_status2[4];
+	struct node *temp;
+	temp=(struct node*)malloc(sizeof(struct node));
+	int prio;
+	
+/*	param[0].sched_priority = 110; 
+	param[1].sched_priority = 99; // " "
+	param[2].sched_priority = 0; // " "
+	param[3].sched_priority = 78; // " "
+	param[4].sched_priority = 65;
+*/
 
-  
-  for(int j=0;j<5;j++){
-    //thread attribute creation
-    error_status2[j] = pthread_attr_init(&tattr[j]);
-    if(error_status2[j] != 0){
-      printf("attr_init error %d= %d\n",j,error_status2[j]);
-    }
 
-    //Thread attribute initialization
-    error_status2[j] = pthread_attr_setinheritsched(&tattr[j],PTHREAD_EXPLICIT_SCHED);
-    if(error_status2[j] != 0){
-      printf("thread %d setinherit_sched error = %d\n",j,error_status2[j]);
-    }
+	for(int i=0;i<num_lines;i++){
+		temp=head[i]->next;
+		prio=atoi(temp->data);
+		printf("Priority is %d\n",prio);
+		param[i].sched_priority=prio;	
 
-    //Thread policy initialization
-    error_status2[j] = pthread_attr_setschedpolicy(&tattr[j],SCHED_FIFO);
-    if(error_status2[j] != 0 ){
-      printf("thread %d setschedpolicy error = %d\n",j,error_status2[j]);
-    }
-  
-    //Thread priority initialization
-    error_status2[j] = pthread_attr_setschedparam(&tattr[j], &param[j]);
-    if(error_status2[j] != 0){
-      printf("thread %d setschedparam error = %d\n", j,error_status2[j]);
-    } 
-  }
+	}
+	int error_status2[4];
+
+
+	for(int j=0;j<num_lines;j++){
+	//thread attribute creation
+		error_status2[j] = pthread_attr_init(&tattr[j]);
+		if(error_status2[j] != 0){
+			printf("attr_init error %d= %d\n",j,error_status2[j]);
+		}
+
+	//Thread attribute initialization
+		error_status2[j] = pthread_attr_setinheritsched(&tattr[j],PTHREAD_EXPLICIT_SCHED);
+		if(error_status2[j] != 0){
+			printf("thread %d setinherit_sched error = %d\n",j,error_status2[j]);
+		}
+
+	//Thread policy initialization
+		error_status2[j] = pthread_attr_setschedpolicy(&tattr[j],SCHED_FIFO);
+		if(error_status2[j] != 0 ){
+			printf("thread %d setschedpolicy error = %d\n",j,error_status2[j]);
+		}
+
+	//Thread priority initialization
+		error_status2[j] = pthread_attr_setschedparam(&tattr[j], &param[j]);
+		if(error_status2[j] != 0){
+			printf("thread %d setschedparam error = %d\n", j,error_status2[j]);
+		} 
+	}
 }
 void wait_cond_var(int *i){
 
-  pthread_mutex_lock(&mutex);
-  int policy;
-  printf("Thread idex %d\n",*i);
-  while (!conditionMet) {
-    printf("Thread %ld blocked\n",pthread_self());
-    pthread_getschedparam(pthread_self(), &policy, &param[*i]);
-    pthread_cond_wait(&cond, &mutex);
-  }
-  printf("Thread %ld Executed\n",pthread_self());
-  pthread_mutex_unlock(&mutex);
+	pthread_mutex_lock(&mutex);
+	int policy;
+	printf("Thread idex %d\n",*i);
+	while (!conditionMet) {
+		printf("Thread %ld blocked\n",pthread_self());
+		pthread_getschedparam(pthread_self(), &policy, &param[*i]);
+		pthread_cond_wait(&cond, &mutex);
+	}
+	printf("Thread %ld Executed\n",pthread_self());
+	pthread_mutex_unlock(&mutex);
 
 }
 
 void broad_cond_var(){
 
-  pthread_mutex_lock(&mutex);
-  conditionMet = 1;
-  printf("Wake up all waiting threads...\n");
-  pthread_cond_broadcast(&cond);
-  pthread_mutex_unlock(&mutex);
-  printf("Wait for threads and cleanup\n");
+	pthread_mutex_lock(&mutex);
+	conditionMet = 1;
+	printf("Wake up all waiting threads...\n");
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+	printf("Wait for threads and cleanup\n");
 }
 
 void *threadfunc(void *parm){
-  int *i;
-  i=(int *)parm;
-  wait_cond_var(i);
-  // if(*(head[*i].data)=='A')
-  //   aperiodic_body();
-  // else
-  //   periodic_body();
+	int *i;
+	i=(int *)parm;
+	wait_cond_var(i);
+	// if(*(head[*i].data)=='A')
+	//   aperiodic_body();
+	// else
+	//   periodic_body();
 
-  return NULL;
+	return NULL;
 }
 
 void create(int count,char *s)
