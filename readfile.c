@@ -4,7 +4,9 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 #include "test.h"
+
 
 
 int main()
@@ -13,7 +15,8 @@ int main()
 	char line1[10];
 	char *line1_str[2];
 	int i=0,error_status;
-	pthread_t threadid[num_lines];
+	pthread_t threadid[num_lines],thread_id1;
+
 	// int ch;
 
 	if ((fp=fopen("readme.txt","r")) == NULL)
@@ -46,26 +49,48 @@ int main()
 		fgets(line[i], sizeof(line[i]), fp);
 		printf("%s\n", line[i]);
 	}
+
+	int prio[num_lines];
+
+	struct node *head[num_lines];
 	for (int i = 0; i < num_lines; i++){
-		create(i,line[i]);
+		// head[i]=(struct node*)malloc(sizeof(struct node));
+		// head[i]->pthread_id_l=10;
+		head[i] = create(line[i]);
+		prio[i] = atoi(head[i]->next->data);
+		printf("Priority is %d\n",prio[i]);
+
 	}
 	for (int i = 0; i < num_lines; i++){
-		print(i);
-		printf("**\n");
+		//printf("%s\n", head[i]->data);
+		print(head[i]);
+		//printf("**\n");
 	}
 
-	set_priority();
+	set_priority(prio);
+
+	for (int j = 0; j < 10; j++){
+		pthread_mutex_init(&mtx[j], NULL);
+	}
+	
+
+	error_status = pthread_create( &thread_id1, &tattr1, &mouse_click, NULL);
+	if(error_status != 0){
+		printf("thread create error status");
+	}
 
 	printf("Create %d threads\n", num_lines);
 	for(i=0; i<num_lines; i++) {
-		error_status = pthread_create(&threadid[i], &tattr[i], threadfunc, &i);
+		error_status = pthread_create(&threadid[i], &tattr[i], &threadfunc, head[i]);
 		if(error_status != 0){
 					printf("thread create error status \n");
 				} 	
 	
 	}
 
-	sleep(5); 
+	
+
+	sleep(3); 
 	broad_cond_var();
 
 
@@ -73,9 +98,13 @@ int main()
 		pthread_join(threadid[i], NULL);
 	
 	}
+	pthread_join(thread_id1, NULL);
 	pthread_cond_destroy(&cond); 
 	pthread_mutex_destroy(&mutex);
 
+	for (int j = 0; i < 10; j++){
+		pthread_mutex_destroy(&mtx[j]);
+	}
 	printf("Main completed\n");
 
 
