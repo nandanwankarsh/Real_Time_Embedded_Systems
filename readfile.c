@@ -4,7 +4,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
-#include <ctype.h>
 #include "test.h"
 
 
@@ -16,6 +15,8 @@ int main()
 	char *line1_str[2];
 	int i=0,error_status;
 	pthread_t threadid[num_lines],thread_id1;
+	sem_init(&sem0, 0, 0);
+	sem_init(&sem1, 0, 0);
 
 	// int ch;
 
@@ -42,7 +43,7 @@ int main()
 		i++;
 		token = strtok (NULL, " ");
     }
-
+    printf("Numbere of lines %d\n", num_lines );
 	char line[num_lines][100];
 
 	for (int i = 0; i < num_lines; i++){
@@ -109,7 +110,7 @@ int main()
 
 
 
-
+	close(fd);
 	fclose(fp);
 
 	return 0;
