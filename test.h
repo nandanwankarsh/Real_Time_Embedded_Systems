@@ -20,7 +20,9 @@
 #include<linux/input.h>
 #include<fcntl.h>
 #include <ctype.h>
-#define EVENT_FILE_NAME "/dev/input/event2"
+#include <time.h>
+#include <semaphore.h>
+#define EVENT_FILE_NAME "/dev/input/event18"
 
 int num_lines;
 int exec_time;
@@ -31,14 +33,14 @@ struct node{
     struct node *next;
 };
 
-int                 conditionMet = 0;
+int                 fd,conditionMet = 0, event0=0,event1=0,termination_flag=0;
 pthread_cond_t      cond  = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t     mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mtx[10];
+pthread_mutex_t     mtx[10];
 
 struct sched_param param[5],param1;
 pthread_attr_t tattr[5],tattr1;
-
+sem_t sem0,sem1;
 
 
 
@@ -65,6 +67,7 @@ void *threadfunc(void *parm);
 void periodic_body();
 void compute(int iteration);
 void aperiodic_body(struct node *head); 
+void *mouse_click();
 // int main()
 // {
 //     int i,n;
@@ -130,7 +133,7 @@ void set_priority(int* prio){
 
   pthread_attr_init(&tattr1);
   pthread_attr_setinheritsched(&tattr1,PTHREAD_EXPLICIT_SCHED);
-  pthread_attr_setschedpolicy(&tattr1,SCHED_FIFO);
+  // pthread_attr_setschedpolicy(&tattr1,SCHED_FIFO);
   pthread_attr_setschedparam(&tattr1, &param1);
 
 }
@@ -187,6 +190,7 @@ void *threadfunc(void *parm){
  void periodic_body(struct node *head){
 
    struct node* temp;
+   struct timespec next_time,period_time;
   // temp=(struct node*)malloc(sizeof(struct node));
   temp = head;
   int iteration,mutex_no,period;
@@ -197,29 +201,57 @@ void *threadfunc(void *parm){
     temp = temp->next;
   }
 
-  while(temp!=NULL){
-    // printf("%s\n", temp->data );
-    if (isalpha(*(temp->data))){
-      if (*(temp->data)=='L'){
-        mutex_no = atoi((temp->data+1));
-        printf("Mutex %d locked\n",mutex_no );
-        pthread_mutex_lock(&mtx[mutex_no]);
+  // printf("Period is %d \n", period );
+
+  clock_gettime(CLOCK_MONOTONIC, &next_time);
+
+  period_time.tv_nsec = period*1000000;
+
+  // printf("The period is %lu \n", period_time.tv_nsec);
+
+  while(1){
+
+    while(temp!=NULL){
+      // printf("%s\n", temp->data);
+      if (isalpha(*(temp->data))){
+        if (*(temp->data)=='L'){
+          mutex_no = atoi((temp->data+1));
+          printf("Mutex %d locked\n",mutex_no );
+          pthread_mutex_lock(&mtx[mutex_no]);
+        }
+        else{
+          mutex_no = atoi((temp->data+1));
+          printf("Mutex %d unlocked\n",mutex_no );
+          pthread_mutex_unlock(&mtx[mutex_no]);
+        }
+        //printf("%s\n", (temp->data));
+        // printf("here here\n");
+        temp = temp->next; 
       }
       else{
-        mutex_no = atoi((temp->data+1));
-        printf("Mutex %d unlocked\n",mutex_no );
-        pthread_mutex_unlock(&mtx[mutex_no]);
+        iteration = atoi(temp->data);
+        printf("Iterations are %d\n", iteration );
+        compute(iteration);
+        temp = temp->next;
       }
-      //printf("%s\n", (temp->data));
-      printf("here here\n");
-      temp = temp->next; 
     }
-    else{
-      iteration = atoi(temp->data);
-      printf("Iterations are %d\n", iteration );
-      compute(iteration);
-      temp = temp->next;
+
+    printf("Task body done for %lu \n", pthread_self() );
+    temp = head->next->next->next;
+
+    // usleep(period*1000);
+    // Implementing periodicity
+    if((next_time.tv_nsec+period_time.tv_nsec)>=1000000000){
+      next_time.tv_nsec = (next_time.tv_nsec+period_time.tv_nsec)%1000000000;
+      next_time.tv_sec++;
+
     }
+    else{   
+      next_time.tv_nsec = next_time.tv_nsec+period_time.tv_nsec;
+    }
+
+    printf("The next time for thread id %lu is %lu \n", pthread_self(), next_time.tv_nsec);
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_time, 0);
   }
 
 }
@@ -233,11 +265,31 @@ void compute(int iteration){
 
 void aperiodic_body(struct node *head){
 
+  printf("In aperiodic body\n");
+  atoi(head->next->next->data)==0?sem_wait(&sem0):sem_wait(&sem1);
+
+  // while((event0 == 1)||(event1 == 1)){
+
+  //   printf("HERE HERE\n");
+
+  //   if (event0==1){
+  //     printf("In event 0\n");
+  //     event0 = 0;
+  //   }
+  //   if (event1==1){
+  //     printf("In event 1\n");
+  //     event1 = 0;
+  //   }
+
+  // }
+  printf("Event detected %d for thread %lu*********************************************************************************\n",atoi(head->next->next->data),pthread_self());
+  printf("End loop\n");
+
 }
 
 void *mouse_click(){
 
-  int  fd;
+  // int  fd;
   struct input_event event;
   fd = open(EVENT_FILE_NAME, O_RDONLY);
   if (fd < 0){
@@ -246,12 +298,22 @@ void *mouse_click(){
 
   while(read(fd,&event,sizeof(event))){
     //If left or right click then set termination flag
-    if(event.code == 272 && event.value == 1)
+    if(event.code == 272 && event.value == 0){
       printf("Left click event detected\n");
-    if(event.code == 272 && event.value == 1)
+      sem_post(&sem0);
+      event0 = 1;
+      // break;
+    }
+    if(event.code == 273 && event.value == 0){
       printf("Right click event detected\n");
+      sem_post(&sem1);
+      event1 = 1;
+      // break;
+    }
+
     
   }
+  printf("End loop\n");
 
 return NULL;
 }
