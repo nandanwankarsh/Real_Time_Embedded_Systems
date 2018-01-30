@@ -34,7 +34,7 @@ struct node{
     struct node *next;
 };
 
-int                 fd,conditionMet = 0, event0=0,event1=0,termination_flag=0;
+int                 fd,conditionMet = 0, event0=0,event1=0,termination_flag=0,event0_count,event1_count;
 pthread_cond_t      cond,ap_cond_0,ap_cond_1;
 //pthread_cond_t      ap_cond_0  = PTHREAD_COND_INITIALIZER;
 //pthread_cond_t      ap_cond_1  = PTHREAD_COND_INITIALIZER;
@@ -272,33 +272,37 @@ void aperiodic_body(struct node *head){
 		
 	printf("In aperiodic body\n");
 //	atoi(head->next->next->data)==0?sem_wait(&sem0):sem_wait(&sem1);
-	//while(termination_flag==0){
+	while(termination_flag==0){
 	
 		if(atoi(head->next->next->data)==0){
 			pthread_mutex_lock(&ap_mutex);
-	 		while (!event0) {
+	 		//while (!event0 && event0_count<3) {
 		    		printf("Aperiodic Thread %ld blocked for event %d\n",pthread_self(),atoi(head->next->next->data));
 		    		if(pthread_cond_wait(&ap_cond_0, &ap_mutex)<0)
 					printf("ap_cond_0 error\n");
-			}
+			//}
 			//sleep(0.5);
+			event0_count++;
+			event0=0;
 			printf("******Thread %ld Executed\n",pthread_self());
 	  		pthread_mutex_unlock(&ap_mutex);
 	  	}
 		else if(atoi(head->next->next->data)==1){
 			pthread_mutex_lock(&ap_mutex);
-	 		while (!event1) {
+	 		//while (!event1 && event1_count<3) {
 		    		printf("Aperiodic Thread %ld blocked for event %d\n",pthread_self(),atoi(head->next->next->data));
 		    		if(pthread_cond_wait(&ap_cond_1, &ap_mutex)<0)
 					printf("ap_cond_1 error\n");
 				
-			}
+			//}
 			//sleep(0.5);
+			event1_count++;
+			event1=0;
 			printf("*****Thread %ld Executed\n",pthread_self());
 	  		pthread_mutex_unlock(&ap_mutex);
 		}
 
-	//	}
+		}
 
 		// while((event0 == 1)||(event1 == 1)){
 
