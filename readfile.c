@@ -17,10 +17,12 @@ int main()
 	pthread_t threadid[num_lines],thread_id1;
 	sem_init(&sem0, 0, 0);
 	sem_init(&sem1, 0, 0);
+	printf("PID is %d\n",getpid());
+	
 
 	// int ch;
 
-	if ((fp=fopen("readme.txt","r")) == NULL)
+	if ((fp=fopen("readfile.txt","r")) == NULL)
 		printf("Cannot open file\n");
 
 
@@ -74,6 +76,13 @@ int main()
 		pthread_mutex_init(&mtx[j], NULL);
 	}
 	
+	if(pthread_cond_init(&cond,NULL)<0)
+		printf("Cond var main error");
+	if(pthread_cond_init(&ap_cond_0,NULL)<0)
+		printf("Cond var ap_0 error");
+	if(pthread_cond_init(&ap_cond_1,NULL)<0)
+		printf("Cond var ap_1 error");
+
 
 	error_status = pthread_create( &thread_id1, &tattr1, &mouse_click, NULL);
 	if(error_status != 0){
@@ -101,7 +110,10 @@ int main()
 	}
 	pthread_join(thread_id1, NULL);
 	pthread_cond_destroy(&cond); 
+	pthread_cond_destroy(&ap_cond_0); 
+	pthread_cond_destroy(&ap_cond_1); 
 	pthread_mutex_destroy(&mutex);
+	pthread_mutex_destroy(&ap_mutex);
 
 	for (int j = 0; i < 10; j++){
 		pthread_mutex_destroy(&mtx[j]);
