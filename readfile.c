@@ -127,22 +127,28 @@ int main()
 //	for (i=0; i<num_lines; ++i) {
 		//usleep(1000);
 //		if(pthread_join(threadid[i], NULL)<0)
-			printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
+			//printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
 	
 //	}
 /*	if(pthread_join(thread_id1, NULL)<0)
 		printf("termaination thread not joined");
 */
 	if(pthread_join(t_thread, NULL)<0)
-		printf("termaination thread not joined");	
+		printf("termaination thread not joined");
+		// sleep(1);
+		// printf("So ke uth gaya\n");	
+		// pthread_cond_broadcast(&ap_cond_0);
+		// pthread_cond_broadcast(&ap_cond_1);
+		// pthread_cond_destroy(&cond); 
+		// pthread_cond_destroy(&ap_cond_0); 
+		// pthread_cond_destroy(&ap_cond_1); 
+		// pthread_mutex_destroy(&mutex);
+		// pthread_mutex_destroy(&ap_mutex);
 
-		pthread_cond_destroy(&cond); 
-		pthread_cond_destroy(&ap_cond_0); 
-		pthread_cond_destroy(&ap_cond_1); 
-		pthread_mutex_destroy(&mutex);
-		pthread_mutex_destroy(&ap_mutex);
+		// printf("Maardaala saale ko\n");
+		// join();
 
-	/*	for (int j = 0; i < 10; j++){
+	/*	for (int j = 0; j < 10; j++){
 			pthread_mutex_destroy(&mtx[j]);
 		}*/
 
