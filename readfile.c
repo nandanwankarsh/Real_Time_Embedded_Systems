@@ -14,15 +14,17 @@ int main()
 	char line1[10];
 	char *line1_str[2];
 	int i=0,error_status;
-	pthread_t threadid[num_lines],thread_id1;
-	sem_init(&sem0, 0, 0);
+	pthread_t threadid[num_lines];
+	
 	sem_init(&sem1, 0, 0);
 	printf("PID is %d\n",getpid());
 	
+	struct timespec now,terminate;
+	clock_gettime(CLOCK_MONOTONIC, &now);
 
 	// int ch;
 
-	if ((fp=fopen("readfile.txt","r")) == NULL)
+	if ((fp=fopen("readme.txt","r")) == NULL)
 		printf("Cannot open file\n");
 
 
@@ -45,7 +47,10 @@ int main()
 		i++;
 		token = strtok (NULL, " ");
     }
-    printf("Numbere of lines %d\n", num_lines );
+    printf("Numbere of lines %d and exec time %d \n", num_lines,exec_time);
+
+	terminate.tv_nsec = exec_time*1000000;
+
 	char line[num_lines][100];
 
 	for (int i = 0; i < num_lines; i++){
@@ -83,7 +88,7 @@ int main()
 	if(pthread_cond_init(&ap_cond_1,NULL)<0)
 		printf("Cond var ap_1 error");
 
-
+	
 	error_status = pthread_create( &thread_id1, &tattr1, &mouse_click, NULL);
 	if(error_status != 0){
 		printf("thread create error status");
@@ -101,27 +106,52 @@ int main()
 	
 
 	sleep(3); 
+	error_status = pthread_create( &t_thread, &tattr2 , &termination,threadid);
 	broad_cond_var();
 
+/*	if((now.tv_nsec+terminate.tv_nsec)>=1000000000){
+		now.tv_nsec = (now.tv_nsec+terminate.tv_nsec)%1000000000;
+		now.tv_sec++;
 
-	for (i=0; i<num_lines; ++i) {
-		pthread_join(threadid[i], NULL);
+	}
+	else{   
+		now.tv_nsec = now.tv_nsec+terminate.tv_nsec;
+	}
+	now.tv_nsec = now.tv_nsec+terminate.tv_nsec;
+	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &now, 0);
+
+	termination_flag = 1;
+*/
+//	sem_wait(&sem1);
+
+//	for (i=0; i<num_lines; ++i) {
+		//usleep(1000);
+//		if(pthread_join(threadid[i], NULL)<0)
+			printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
 	
+//	}
+/*	if(pthread_join(thread_id1, NULL)<0)
+		printf("termaination thread not joined");
+*/
+	if(pthread_join(t_thread, NULL)<0)
+		printf("termaination thread not joined");	
+
+		pthread_cond_destroy(&cond); 
+		pthread_cond_destroy(&ap_cond_0); 
+		pthread_cond_destroy(&ap_cond_1); 
+		pthread_mutex_destroy(&mutex);
+		pthread_mutex_destroy(&ap_mutex);
+
+	/*	for (int j = 0; i < 10; j++){
+			pthread_mutex_destroy(&mtx[j]);
+		}*/
+
+		printf("Main completed\n");
+ 
+
+	for(i=0;i<num_lines;i++){
+		cleanup(head[i]);
 	}
-	pthread_join(thread_id1, NULL);
-	pthread_cond_destroy(&cond); 
-	pthread_cond_destroy(&ap_cond_0); 
-	pthread_cond_destroy(&ap_cond_1); 
-	pthread_mutex_destroy(&mutex);
-	pthread_mutex_destroy(&ap_mutex);
-
-	for (int j = 0; i < 10; j++){
-		pthread_mutex_destroy(&mtx[j]);
-	}
-	printf("Main completed\n");
-
-
-
 	close(fd);
 	fclose(fp);
 
