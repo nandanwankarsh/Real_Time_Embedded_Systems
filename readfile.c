@@ -19,8 +19,8 @@ int main()
 	sem_init(&sem1, 0, 0);
 	printf("PID is %d\n",getpid());
 	
-	struct timespec now,terminate;
-	clock_gettime(CLOCK_MONOTONIC, &now);
+//	struct timespec now,terminate;
+//	clock_gettime(CLOCK_MONOTONIC, &now);
 
 	// int ch;
 
@@ -49,7 +49,7 @@ int main()
     }
     printf("Numbere of lines %d and exec time %d \n", num_lines,exec_time);
 
-	terminate.tv_nsec = exec_time*1000000;
+//	terminate.tv_nsec = exec_time*1000000;
 
 	char line[num_lines][100];
 
@@ -78,9 +78,13 @@ int main()
 	set_priority(prio);
 
 	for (int j = 0; j < 10; j++){
-		pthread_mutex_init(&mtx[j], NULL);
+		
+		pthread_mutexattr_init(&mtx_attr[j]);
+		pthread_mutexattr_setprotocol(&mtx_attr[j],PTHREAD_PRIO_NONE);
+		pthread_mutex_init(&mtx[j], &mtx_attr[j]);
 	}
-	
+	//pthread_mutexattr_setprotocol(&mutex_attr,PTHREAD_PRIO_INHERIT);
+	//pthread_mutexattr_setprotocol(&ap_mutex_attr,PTHREAD_PRIO_INHERIT);
 	if(pthread_cond_init(&cond,NULL)<0)
 		printf("Cond var main error");
 	if(pthread_cond_init(&ap_cond_0,NULL)<0)
@@ -127,30 +131,27 @@ int main()
 //	for (i=0; i<num_lines; ++i) {
 		//usleep(1000);
 //		if(pthread_join(threadid[i], NULL)<0)
-			//printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
+			printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
 	
 //	}
 /*	if(pthread_join(thread_id1, NULL)<0)
 		printf("termaination thread not joined");
 */
-	if(pthread_join(t_thread, NULL)<0)
-		printf("termaination thread not joined");
-		// sleep(1);
-		// printf("So ke uth gaya\n");	
-		// pthread_cond_broadcast(&ap_cond_0);
-		// pthread_cond_broadcast(&ap_cond_1);
-		// pthread_cond_destroy(&cond); 
-		// pthread_cond_destroy(&ap_cond_0); 
-		// pthread_cond_destroy(&ap_cond_1); 
-		// pthread_mutex_destroy(&mutex);
-		// pthread_mutex_destroy(&ap_mutex);
+	pthread_join(t_thread, NULL);
+			
 
-		// printf("Maardaala saale ko\n");
-		// join();
+		pthread_cond_destroy(&cond); 
+		pthread_cond_destroy(&ap_cond_0); 
+		pthread_cond_destroy(&ap_cond_1); 
+		pthread_mutex_destroy(&mutex);
+		pthread_mutex_destroy(&ap_mutex);
 
-	/*	for (int j = 0; j < 10; j++){
-			pthread_mutex_destroy(&mtx[j]);
-		}*/
+		for (int j = 0; j < 10; j++){
+			printf("Mutex %d\n",j);
+			if(pthread_mutex_destroy(&mtx[j])==EPERM)
+				printf("Error mutex destroy");
+				
+		}
 
 		printf("Main completed\n");
  
