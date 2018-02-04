@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -13,7 +14,7 @@ int main()
 	FILE *fp;
 	char line1[10];
 	char *line1_str[2];
-	int i=0,error_status;
+	int i=0,j=0,error_status;
 	pthread_t threadid[num_lines];
 	
 	sem_init(&sem1, 0, 0);
@@ -53,7 +54,7 @@ int main()
 
 	char line[num_lines][100];
 
-	for (int i = 0; i < num_lines; i++){
+	for (i = 0; i < num_lines; i++){
 		fgets(line[i], sizeof(line[i]), fp);
 		printf("%s\n", line[i]);
 	}
@@ -61,7 +62,7 @@ int main()
 	int prio[num_lines];
 
 	struct node *head[num_lines];
-	for (int i = 0; i < num_lines; i++){
+	for (i = 0; i < num_lines; i++){
 		// head[i]=(struct node*)malloc(sizeof(struct node));
 		// head[i]->pthread_id_l=10;
 		head[i] = create(line[i]);
@@ -69,7 +70,7 @@ int main()
 		printf("Priority is %d\n",prio[i]);
 
 	}
-	for (int i = 0; i < num_lines; i++){
+	for (i = 0; i < num_lines; i++){
 		//printf("%s\n", head[i]->data);
 		print(head[i]);
 		//printf("**\n");
@@ -77,11 +78,11 @@ int main()
 
 	set_priority(prio);
 
-	for (int j = 0; j < 10; j++){
+	for (j = 0; j < 10; j++){
 		
 		pthread_mutexattr_init(&mtx_attr[j]);
-		pthread_mutexattr_setprotocol(&mtx_attr[j],PTHREAD_PRIO_NONE);
-		pthread_mutex_init(&mtx[j], &mtx_attr[j]);
+	//	pthread_mutexattr_setprotocol(&mtx_attr[j],PTHREAD_PRIO_INHERIT);
+	//	pthread_mutex_init(&mtx[j], &mtx_attr[j]);
 	}
 	//pthread_mutexattr_setprotocol(&mutex_attr,PTHREAD_PRIO_INHERIT);
 	//pthread_mutexattr_setprotocol(&ap_mutex_attr,PTHREAD_PRIO_INHERIT);
@@ -131,7 +132,7 @@ int main()
 //	for (i=0; i<num_lines; ++i) {
 		//usleep(1000);
 //		if(pthread_join(threadid[i], NULL)<0)
-			printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
+			//printf("Deadlock found %lu\n",(unsigned long)threadid[i]);
 	
 //	}
 /*	if(pthread_join(thread_id1, NULL)<0)
@@ -140,13 +141,13 @@ int main()
 	pthread_join(t_thread, NULL);
 			
 
-		pthread_cond_destroy(&cond); 
+	/*	pthread_cond_destroy(&cond); 
 		pthread_cond_destroy(&ap_cond_0); 
 		pthread_cond_destroy(&ap_cond_1); 
 		pthread_mutex_destroy(&mutex);
 		pthread_mutex_destroy(&ap_mutex);
 
-		for (int j = 0; j < 10; j++){
+		for (j = 0; j < 10; j++){
 			printf("Mutex %d\n",j);
 			if(pthread_mutex_destroy(&mtx[j])==EPERM)
 				printf("Error mutex destroy");
@@ -154,7 +155,7 @@ int main()
 		}
 
 		printf("Main completed\n");
- 
+ */
 
 	for(i=0;i<num_lines;i++){
 		cleanup(head[i]);
