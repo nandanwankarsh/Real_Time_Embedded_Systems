@@ -13,7 +13,10 @@ int check_utilization(int num_tasks, float* taskset);
 int busy_period(int num_tasks, float* taskset);
 void del(char str[], char ch);
 void edf(char* taskset,int no_tasks);
-void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines);
+void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq);
+void merge(float arr[], int l, int m, int r);
+void mergeSort(float arr[], int l, int r);
+int removeDuplicates(float a[], int array_size);
 
 void main(){
 
@@ -135,7 +138,7 @@ void edf(char* str_taskset,int no_tasks){
 				j++;
 			} 
 			printf("here here\n");
-			float load_mat[count-1][3];
+			float t_array[count-1];
 			j=count=t=0;
 
 
@@ -147,18 +150,43 @@ void edf(char* str_taskset,int no_tasks){
 					if(t >= L)
 						break;
 					else{
-						t = taskset[i+1] + j*taskset[i+2];
-						 printf("Value of t is %d\n", t);
+						t= taskset[i+1] + j*taskset[i+2];
+						printf("Value of t is %d\n", t);
 						
-						count ++;
-						load_mat[count-1][0]=t;
+						if(t<=L){
+							count ++;
+							t_array[count-1]=t;
+						}
 					}
 				}
 
 				j++;
 			} 
+			for(int i=0;i<count;i++){
 
-			calculate_proc_demand(load_mat,taskset,t,no_tasks);
+				printf("%f\t",t_array[i]);
+
+			}
+			mergeSort(t_array,0,count-1);
+			for(int i=0;i<count;i++){
+
+				printf("%f\t",t_array[i]);
+
+			}
+			int count_unq=0;
+			printf("\n");
+			count_unq=removeDuplicates(t_array,count);
+			printf("No. of unique elements %d\n",count_unq);
+			float load_mat[count_unq][3];
+			for(int i=0;i<count_unq;i++){
+
+				load_mat[i][0]=t_array[i];
+				printf("%f\t",load_mat[i][0]);
+
+			}
+			
+
+			calculate_proc_demand(load_mat,taskset,t,no_tasks,count_unq);
 			// for(int i=0;i<count-1;i++){
 
 			// 	for(int j=0;j<3;j++){
@@ -172,18 +200,55 @@ void edf(char* str_taskset,int no_tasks){
 		}
 	}
 
-		
+	
 
 
 }
+int removeDuplicates(float a[], int array_size)
+ {
+   int i, j;
+ 
+   j = 0;
+ 
+   // Print old array...
+   printf("\n\nOLD : ");
+   // for(i = 0; i < array_size; i++)
+   // {
+   //    printf("%f ", a[i]);
+   // }
+ 
+   // Remove the duplicates ...
+   for (i = 1; i < array_size; i++)
+   {
+     if (a[i] != a[j])
+     {
+       j++;
+       a[j] = a[i]; // Move it to the front
+     }
+   }
+ 
+   // The new array size..
+   array_size = (j + 1);
+ 
+   // Print new array...
+   // printf("\nNEW : ");
+   // for(i = 0; i< array_size; i++)
+   // {
+   //    printf("[%f] ", a[i]);
+   // }
+   // printf("\n\n");
+ 
+   // Return the new size...
+   return(j + 1);
+ }
 
 
-void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines){
+void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq){
 
 	float sum_dead;
 	int index=0;
 	// printf("Busy Val is %f\n", busy_val);
-	while(table[index][0]<=busy_val){
+	while(index<count_unq && table[index][0]<=busy_val){
 
 		for(int i=0;i<num_lines;i++){
 
@@ -198,14 +263,14 @@ void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,i
 		table[index][2]=table[index][1]/table[index][0];
 		// printf("Index is %f\t%f\n", table[index][0],table[index][1]);
 		// printf("Index is %f\t %d\n", sum_dead,index);
-		if (table[index][0]==busy_val)
+		if (table[index][0]>=busy_val)
 			break;
 		index++;
 
 	}
-	// printf("Index is %d\n", index);
+	 printf("Index is %d\n", index);
 
-	for(int i=0;i<=index;i++){
+		for(int i=0;i<index;i++){
 
 				for(int j=0;j<3;j++){
 
@@ -241,7 +306,7 @@ int busy_period(int num_tasks, float* taskset){
 			L += (ceil(prev_L/taskset[i+2]))*taskset[i];
 			
 		}
-		printf("L is %d \n",L );
+		// printf("L is %d \n",L );
 		if(prev_L == L){
 			break;
 		}
@@ -273,3 +338,74 @@ int check_utilization(int num_tasks, float* taskset){
 	return ret;
 }
 
+void merge(float arr[], int l, int m, int r)
+{
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* create temp arrays */
+    int L[n1], R[n2];
+ 
+    /* Copy data to temp arrays L[] and R[] */
+    for (i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = arr[m + 1+ j];
+ 
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; // Initial index of first subarray
+    j = 0; // Initial index of second subarray
+    k = l; // Initial index of merged subarray
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
+            arr[k] = L[i];
+            i++;
+        }
+        else
+        {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copy the remaining elements of L[], if there
+       are any */
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+ 
+    /* Copy the remaining elements of R[], if there
+       are any */
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+ 
+/* l is for left index and r is right index of the
+   sub-array of arr to be sorted */
+void mergeSort(float arr[], int l, int r)
+{
+    if (l < r)
+    {
+        // Same as (l+r)/2, but avoids overflow for
+        // large l and h
+        int m = l+(r-l)/2;
+ 
+        // Sort first and second halves
+        mergeSort(arr, l, m);
+        mergeSort(arr, m+1, r);
+ 
+        merge(arr, l, m, r);
+    }
+}
+	
