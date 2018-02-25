@@ -14,8 +14,8 @@ void wrapper_rm(char* str_taskset,int no_tasks);
 void rm(char* taskset,int no_tasks);
 int utilization_bound(int no_tasks, float* taskset);
 int time_demand(int no_tasks, float* taskset);
-
-
+float min(float a,float b);
+void eff_utilization_bound(float taskset[][3],int no_tasks);
 
 int main(){
 
@@ -163,6 +163,13 @@ void del(char str[], char ch) {
 	// printf("\ncorrected string is : %s \t %s", str1,str);
 }
 
+float min(float a,float b){
+
+	if(a<b)
+		return a;
+	else
+		return b;
+}
 
 void rm(char* str_taskset,int no_tasks){
 
@@ -216,35 +223,82 @@ void rm(char* str_taskset,int no_tasks){
 
 			printf("U is greater than 1 so not schedulable\n");
 		}
-		else
+		else{
 			printf("U is greater than utilization_bound and less than 1, so need to do time demand analysis\n");
 
-		for (int nt = 1; nt <= no_tasks; nt++){
+			for (int nt = 1; nt <= no_tasks; nt++){
 
-			if (utilization_bound(nt , taskset) != 0){
+				if (utilization_bound(nt , taskset) != 0){
 
-				printf("Task %d utilization results are inconclusive and requires response time analysis\n", nt);
+					printf("Task %d utilization results are inconclusive and requires response time analysis\n", nt);
 
-				int td = time_demand(nt, taskset);
+					int td = time_demand(nt, taskset);
 
-				if(td == 0){
-					printf("Task %d is schedulable after response time analysis\n\n", nt);
+					if(td == 0){
+						printf("Task %d is schedulable after response time analysis\n\n", nt);
+					}
+					else
+						printf("Task %d is not schedulable\n\n", nt);
 				}
-				else
-					printf("Task %d is not schedulable\n\n", nt);
-			}
-			else{
+				else{
 
-				printf("Task %d is schedulable as U is under bound\n\n", nt );
-			}
+					printf("Task %d is schedulable as U is under bound\n\n", nt );
+				}
 
+			}
 		}
 
 	}
 	else{
 		printf("Do for Deadline < period\n");
+		sort_rm(taskset_mat,no_tasks,2);
+		eff_utilization_bound(taskset_mat,no_tasks);
+
 	}
 }
+
+
+void eff_utilization_bound(float taskset[][3],int no_tasks){
+
+	float total_uti=0,uti_dead_j=0.0,uti_dead_k=0.0,bound=0.0;
+	int hn=0,h1=0;
+
+	for (int i=0;i<no_tasks;i++){
+		total_uti=taskset[i][0]/min(taskset[i][1],taskset[i][2]);
+		printf("Total Utilization for task %d\t%f\n",i,total_uti);
+		for(int j=0;j<i;j++){
+
+				
+				// printf("Total Utilization for task %d %f\n",i,total );
+				if((taskset[i][1]>taskset[j][1]) && (taskset[i][1] >= min(taskset[j][2],taskset[j][1]) )){
+
+					uti_dead_j+=taskset[j][0]/min(taskset[j][1],taskset[j][2]);
+					hn++;
+				}
+				else if((taskset[i][1]<taskset[j][1]) && (taskset[i][1] < min(taskset[j][2],taskset[j][1]))){
+
+					uti_dead_k+=taskset[j][0]/min(taskset[i][1],taskset[i][2]);
+					h1++;	
+				}
+			}
+		bound=(i+1-h1)*(pow(2.0,(1.0/(i+1-h1))) - 1);
+		printf("No. of tasks in Hn:%d\n",hn );
+		printf("No. of tasks in H1:%d\n",h1 );
+		printf("j Utilization for task %d\t%f\n",i,uti_dead_j );
+		printf("k Utilization for task %d\t%f\n",i,uti_dead_k );
+		total_uti+=uti_dead_k+uti_dead_j;
+		printf("Total Utilization for task %d\t%f\n",i,total_uti);
+		printf("Utilization  bound is:%f\n",bound);
+		total_uti=uti_dead_j=uti_dead_k=0.0;
+		hn=h1=0;
+		printf("*********************************************************************************************************\n");
+		}
+
+// return 
+
+}
+
+
 
 int utilization_bound(int no_tasks, float* taskset){
 
