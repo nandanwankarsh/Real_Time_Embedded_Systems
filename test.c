@@ -1,203 +1,424 @@
-// #include <stdio.h>
-// #include <string.h>
-
-// int main ()
-// {
-//   char str[] ="P 10 200 200 L2 100 L3 500 U3 100 L4 60 U4 200 U2 200";
-//   char * pch;
-//   printf ("Splitting string \"%s\" into tokens:\n",str);
-//   pch = strtok (str," ");
-//   while (pch != NULL)
-//   {
-//     printf ("%s\n",pch);
-//     pch = strtok (NULL, " ");
-//   }
-//   return 0;
-// }
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+#include <math.h>
+#include "edf.h"
+#include "RM.h"
+#include "DM.h"
+
+// int num_tasks = 3;
+
+// int check_utilization(int num_tasks, float* taskset);
+// double busy_period(int num_tasks, float* taskset);
+void del(char str[], char ch);
+// void edf(char* taskset,int no_tasks);
+// void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq);
+// void merge(float arr[], int l, int m, int r);
+// void mergeSort(float arr[], int l, int r);
+// int removeDuplicates(float a[], int array_size);
+
+int main(){
+
+	FILE *fp;
+	char line1[30];
+	char *line1_str[2],*str_woeol;
+	int num_lines,num_taskset;
+
+	if ((fp=fopen("input.txt","r")) == NULL)
+		printf("Cannot open file\n");
+
+	fgets(line1, sizeof(line1), fp);
+	del(line1,'\n');
+	printf ("Splitting string \"%s\" into tokens:\n",line1);
+	num_taskset=atoi(line1);
+	// printf("No of taskset %d\n",num_taskset);
+	for(int j = 0; j < num_taskset; j++){
+		fgets(line1, sizeof(line1), fp);
+		del(line1,'\n');	
+		num_lines=atoi(line1);
+		// printf("No. of tasks in taskset1 %d\n",num_lines);
+		char line[num_lines][20];
+		char *holder=(char*)malloc(20*num_lines);
+		for (int i = 0; i < num_lines; i++){
+			fgets(line[i], sizeof(line[i]), fp);
+			del(line[i],'\n');
+			strcat(line[i]," ");
+			// printf("%s\n", line[i]);
+			strcat(holder,line[i]);
+			// printf("%s\n", line[i]);
+		}
+		// printf("%s\n", holder);
+		printf("EDF for task %d *************************************************\n",j);
+		edf(holder,num_lines);
+		printf("Rate Monotonic for task %d *************************************************\n",j);
+		rm(holder,num_lines);
+		// printf("Deadline Monotonic for task %d *************************************************\n",j);
+		// dm(holder,num_lines);
 
 
-int num_lines;
-int exec_time;
+		printf("\n");
+	}
 
-struct node{
-    char *data;
-    struct node *next;
-}*head[5];
+	return 0;
+}
 
-int                 conditionMet = 0;
-pthread_cond_t      cond  = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t     mutex = PTHREAD_MUTEX_INITIALIZER;
+void del(char str[], char ch) {
+	int i, j = 0;
+	int size;
+	char ch1;
+	char str1[30];
 
-struct sched_param param[5];
-pthread_attr_t tattr[5];
+	size = strlen(str);
 
+	for (i = 0; i < size; i++) {
+	  if (str[i] != ch) {
+	     ch1 = str[i];
+	     str1[j] = ch1;
+	     j++;
+	  }
+	}
+	str1[j] = '\0';
+	strcpy(str,str1); 
+	// printf("\ncorrected string is : %s \t %s", str1,str);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// **************************************************************************************************************************************************
-void create(int count,char *s);
-void print(int count);
-void set_priority();
-void wait_cond_var(int *i);
-void broad_cond_var();
-void *threadfunc(void *parm);
-
-// int main()
-// {
-//     int i,n;
-//     n=5;  /*n is the total number of nodes */
-//     for(i=0;i<n;i++)
-//     {
-//          head[i]=NULL;
-//          create(i);
-//          print(i);
-//          printf("\n\n");
-//      }
-//     return 0;
-// }
-void set_priority(){
-
-
-	struct node *temp;
-	temp=(struct node*)malloc(sizeof(struct node));
-	int prio;
+// void edf(char* str_taskset,int no_tasks){
 	
-/*	param[0].sched_priority = 110; 
-	param[1].sched_priority = 99; // " "
-	param[2].sched_priority = 0; // " "
-	param[3].sched_priority = 78; // " "
-	param[4].sched_priority = 65;
-*/
+// 	float taskset[3*no_tasks];
+// 	char *token; 
+// 	int count=0;   
+// 	token = strtok (str_taskset," ");
+// 	for (int i=0;i<3*no_tasks;i++){
+// 		taskset[i]=atof(token);
+// 		token = strtok (NULL, " ");
+// 		printf("%f \t",taskset[i]);
+// 	}
+// 	printf("\n");
+// 	for (int i = 0; i < (3*num_tasks); i = i+3){
+
+// 		if(taskset[i+1] == taskset[i+2]){
+
+// 			count++;
+// 		}
+// 	}
+
+// 	if (count == num_tasks){
+
+// 		int u = check_utilization(num_tasks ,taskset);
+// 		if (u == 0){
+			
+// 			printf("U is less than 1 so schedulable directly\n");
+// 		}
+// 		else
+// 			printf("U is greater than 1 so not schedulable\n");
+
+// 	}
+// 	else{
+
+// 		int j=0,count=0;
+// 		double t=0;
+// 		int u = check_utilization(num_tasks ,taskset);
+// 		if (u == 0){
+			
+// 			printf("U is less than 1 so schedulable\n");
+// 		}
+// 		else{
+// 			printf("U is greater than 1 so need to do loading factor analysis\n");
+
+// 			double L = busy_period(num_tasks ,taskset);
+
+// 			 printf("The busy_period is %lf \n", L);        
+
+// 			while(t < L){
+// 				int i = 0;
+// 				for (i ; i < (3*num_tasks); i = i+3){
+					
+
+// 					if(t >= L)
+// 						break;
+// 					else{
+// 						t = taskset[i+1] + j*taskset[i+2];
+// 						  printf("Value of t is %f\n", t);
+// 						// t[count]=t;
+// 						count ++;
+// 					}
+// 				}
+
+// 				j++;
+// 			} 
+// 			printf("here here\n");
+// 			float t_array[count-1];
+// 			j=count=t=0;
 
 
-	for(int i=0;i<num_lines;i++){
-		temp=head[i]->next;
-		prio=atoi(temp->data);
-		printf("Priority is %d\n",prio);
-		param[i].sched_priority=prio;	
+// 			while(t < L){
+// 				int i = 0;
+// 				for (i ; i < (3*num_tasks); i = i+3){
+					
 
-	}
-	int error_status2[4];
+// 					if(t >= L)
+// 						break;
+// 					else{
+// 						t= taskset[i+1] + j*taskset[i+2];
+// 						printf("Value of t is %lf\n", t);
+						
+// 						if(t<=L){
+// 							count ++;
+// 							t_array[count-1]=t;
+// 						}
+// 					}
+// 				}
+
+// 				j++;
+// 			} 
+// 			for(int i=0;i<count;i++){
+
+// 				printf("%f\t",t_array[i]);
+
+// 			}
+// 			mergeSort(t_array,0,count-1);
+// 			for(int i=0;i<count;i++){
+
+// 				printf("%f\t",t_array[i]);
+
+// 			}
+// 			int count_unq=0;
+// 			printf("\n");
+// 			count_unq=removeDuplicates(t_array,count);
+// 			printf("No. of unique elements %d\n",count_unq);
+// 			float load_mat[count_unq][3];
+// 			for(int i=0;i<count_unq;i++){
+
+// 				load_mat[i][0]=t_array[i];
+// 				printf("%f\t",load_mat[i][0]);
+
+// 			}
+			
+
+// 			calculate_proc_demand(load_mat,taskset,t,no_tasks,count_unq);
+// 			// for(int i=0;i<count-1;i++){
+
+// 			// 	for(int j=0;j<3;j++){
+
+// 			// 		printf("%f\t",load_mat[i][j] );
+// 			// 	}
+// 			// 	printf("\n");
+// 			// }
+// 			 // printf("Value of t's count is %d\n", count);
+
+// 		}
+// 	}
+
+	
 
 
-	for(int j=0;j<num_lines;j++){
-	//thread attribute creation
-		error_status2[j] = pthread_attr_init(&tattr[j]);
-		if(error_status2[j] != 0){
-			printf("attr_init error %d= %d\n",j,error_status2[j]);
-		}
+// }
+// int removeDuplicates(float a[], int array_size)
+//  {
+//    int i, j;
+ 
+//    j = 0;
+ 
+//    // Print old array...
+//    printf("\n\nOLD : ");
+//    // for(i = 0; i < array_size; i++)
+//    // {
+//    //    printf("%f ", a[i]);
+//    // }
+ 
+//    // Remove the duplicates ...
+//    for (i = 1; i < array_size; i++)
+//    {
+//      if (a[i] != a[j])
+//      {
+//        j++;
+//        a[j] = a[i]; // Move it to the front
+//      }
+//    }
+ 
+//    // The new array size..
+//    array_size = (j + 1);
+ 
+//    // Print new array...
+//    // printf("\nNEW : ");
+//    // for(i = 0; i< array_size; i++)
+//    // {
+//    //    printf("[%f] ", a[i]);
+//    // }
+//    // printf("\n\n");
+ 
+//    // Return the new size...
+//    return(j + 1);
+//  }
 
-	//Thread attribute initialization
-		error_status2[j] = pthread_attr_setinheritsched(&tattr[j],PTHREAD_EXPLICIT_SCHED);
-		if(error_status2[j] != 0){
-			printf("thread %d setinherit_sched error = %d\n",j,error_status2[j]);
-		}
 
-	//Thread policy initialization
-		error_status2[j] = pthread_attr_setschedpolicy(&tattr[j],SCHED_FIFO);
-		if(error_status2[j] != 0 ){
-			printf("thread %d setschedpolicy error = %d\n",j,error_status2[j]);
-		}
+// void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq){
 
-	//Thread priority initialization
-		error_status2[j] = pthread_attr_setschedparam(&tattr[j], &param[j]);
-		if(error_status2[j] != 0){
-			printf("thread %d setschedparam error = %d\n", j,error_status2[j]);
-		} 
-	}
-}
-void wait_cond_var(int *i){
+// 	float sum_dead;
+// 	int index=0;
+// 	// printf("Busy Val is %f\n", busy_val);
+// 	while(index<count_unq && table[index][0]<=busy_val){
 
-	pthread_mutex_lock(&mutex);
-	int policy;
-	printf("Thread idex %d\n",*i);
-	while (!conditionMet) {
-		printf("Thread %ld blocked\n",pthread_self());
-		pthread_getschedparam(pthread_self(), &policy, &param[*i]);
-		pthread_cond_wait(&cond, &mutex);
-	}
-	printf("Thread %ld Executed\n",pthread_self());
-	pthread_mutex_unlock(&mutex);
+// 		for(int i=0;i<num_lines;i++){
 
-}
+// 			if(taskset_ref[3*i+1]<=table[index][0]){
 
-void broad_cond_var(){
+// 				sum_dead+=taskset_ref[3*i];
+// 				taskset_ref[3*i+1]=taskset_ref[3*i+1]+taskset_ref[3*i+2]	;			
+// 			}
+// 		}
 
-	pthread_mutex_lock(&mutex);
-	conditionMet = 1;
-	printf("Wake up all waiting threads...\n");
-	pthread_cond_broadcast(&cond);
-	pthread_mutex_unlock(&mutex);
-	printf("Wait for threads and cleanup\n");
-}
+// 		table[index][1]=sum_dead;
+// 		table[index][2]=table[index][1]/table[index][0];
+// 		// printf("Index is %f\t%f\n", table[index][0],table[index][1]);
+// 		// printf("Index is %f\t %d\n", sum_dead,index);
+// 		if (table[index][0]>=busy_val)
+// 			break;
+// 		index++;
 
-void *threadfunc(void *parm){
-	int *i;
-	i=(int *)parm;
-	wait_cond_var(i);
-	// if(*(head[*i].data)=='A')
-	//   aperiodic_body();
-	// else
-	//   periodic_body();
+// 	}
+// 	 printf("Index is %d\n", index);
 
-	return NULL;
-}
+// 		for(int i=0;i<index;i++){
 
-void create(int count,char *s)
-{
-//      int n2=5;  /*n2 is the number of nodes in a single linked list*/
-//      char check;
-      char *token;
-      printf ("Splitting string \"%s\" into tokens:\n",s);    
-      token = strtok (s," "); 
-      struct node *temp;
-      while(token != NULL)
-      {
-              
-            printf ("%s\n",token);
-            
-            if(head[count]==NULL)
-            {
-               temp=(struct node*)malloc(sizeof(struct node));
-               temp->data=token;
-               temp->next=NULL;
-               head[count]=temp;
-            }
-            else
-            {
-              temp->next=(struct node*)malloc(sizeof(struct node));
-               temp=temp->next;
-               temp->data=token;
-               temp->next=NULL;
-            }
+// 				for(int j=0;j<3;j++){
 
-            token = strtok (NULL, " ");
-     }
-}
+// 					printf("%f\t",table[i][j] );
+// 				}
+// 				printf("\n");
+// 			}
+// 			  // printf("Value of t's count is %d\n", count);
 
-void print(int count)
-{
-     struct node *temp;
-     temp=head[count];
-     while(temp!=NULL)
-     {
-          printf("%s->",temp->data);
-          temp=temp->next;
-     }
-}
+
+
+
+
+
+// }
+
+
+
+// double busy_period(int num_tasks, float* taskset){
+
+// 	double prev_L=0, L=0;
+
+// 	for (int i = 0; i < 3*(num_tasks); i = i+3){
+		
+// 		prev_L += taskset[i];
+// 	}
+// 	// printf("prev_L is %d \n",prev_L );
+	
+// 	while(1){
+
+// 		for (int i = 0; i < 3*(num_tasks); i = i+3){
+			
+// 			L += (ceil(prev_L/taskset[i+2]))*taskset[i];
+			
+// 		}
+// 		// printf("L is %d \n",L );
+// 		if(prev_L == L){
+// 			break;
+// 		}
+// 		else{
+
+// 			prev_L = L;
+// 			L = 0;
+// 		}
+// 	}
+
+// 	return L;
+// }
+
+// int check_utilization(int num_tasks, float* taskset){
+
+// 	float u;
+// 	int ret;
+// 	for (int i = 0; i < (3*num_tasks); i = i+3){
+// 		u += (taskset[i]/taskset[i+1]);
+// 	}
+
+// 	if (u <= 1){
+// 		ret = 0;
+// 	}
+// 	else{
+// 		ret = 1;
+// 	}
+
+// 	return ret;
+// }
+
+// void merge(float arr[], int l, int m, int r)
+// {
+//     int i, j, k;
+//     int n1 = m - l + 1;
+//     int n2 =  r - m;
+ 
+//     /* create temp arrays */
+//     int L[n1], R[n2];
+ 
+//     /* Copy data to temp arrays L[] and R[] */
+//     for (i = 0; i < n1; i++)
+//         L[i] = arr[l + i];
+//     for (j = 0; j < n2; j++)
+//         R[j] = arr[m + 1+ j];
+ 
+//     /* Merge the temp arrays back into arr[l..r]*/
+//     i = 0; // Initial index of first subarray
+//     j = 0; // Initial index of second subarray
+//     k = l; // Initial index of merged subarray
+//     while (i < n1 && j < n2)
+//     {
+//         if (L[i] <= R[j])
+//         {
+//             arr[k] = L[i];
+//             i++;
+//         }
+//         else
+//         {
+//             arr[k] = R[j];
+//             j++;
+//         }
+//         k++;
+//     }
+ 
+//     /* Copy the remaining elements of L[], if there
+//        are any */
+//     while (i < n1)
+//     {
+//         arr[k] = L[i];
+//         i++;
+//         k++;
+//     }
+ 
+//     /* Copy the remaining elements of R[], if there
+//        are any */
+//     while (j < n2)
+//     {
+//         arr[k] = R[j];
+//         j++;
+//         k++;
+//     }
+// }
+ 
+// /* l is for left index and r is right index of the
+//    sub-array of arr to be sorted */
+// void mergeSort(float arr[], int l, int r)
+// {
+//     if (l < r)
+//     {
+//         // Same as (l+r)/2, but avoids overflow for
+//         // large l and h
+//         int m = l+(r-l)/2;
+ 
+//         // Sort first and second halves
+//         mergeSort(arr, l, m);
+//         mergeSort(arr, m+1, r);
+ 
+//         merge(arr, l, m, r);
+//     }
+// }
+// 	
