@@ -10,7 +10,7 @@
 void sort_rm(float taskset[][3],int no_tasks,int index);
 void del(char str[], char ch);
 void swap(float *a,float *b);
-void wrapper_rm(char* str_taskset,int no_tasks);
+// void wrapper_rm(char* str_taskset,int no_tasks);
 void rm(char* taskset,int no_tasks);
 int utilization_bound(int no_tasks, float* taskset);
 int time_demand(int no_tasks, float* taskset);
@@ -203,8 +203,10 @@ void rm(char* str_taskset,int no_tasks){
 			count++;
 		}
 	}
-	printf("%d\n",count);
+	// printf("%d\n",count);
 	if (count == no_tasks){
+
+		printf("Deadline is equal to period for the taskset\n");
 
 		sort_rm(taskset_mat,no_tasks,2);
 
@@ -250,7 +252,7 @@ void rm(char* str_taskset,int no_tasks){
 
 	}
 	else{
-		printf("Do for Deadline < period\n");
+		printf("Here the Deadline < period for the given taskset\n");
 		sort_rm(taskset_mat,no_tasks,2);
 		eff_utilization_bound(taskset_mat,no_tasks);
 
@@ -262,7 +264,19 @@ void eff_utilization_bound(float taskset[][3],int no_tasks){
 
 	float total_uti=0,uti_dead_j=0.0,uti_dead_k=0.0,bound=0.0;
 	int hn=0,h1=0;
+	float taskset_array[3*no_tasks];
 
+	for (int i=0;i<no_tasks;i++){
+			for(int j=0;j<3;j++){
+
+				taskset_array[i*3+j]=taskset[i][j];
+			}
+		}
+	// printf("The array is: ");
+	// for (int i = 0; i < (3*no_tasks); ++i){
+		
+	// 	printf(" %.3f ",taskset_array[i]);
+	// }
 	for (int i=0;i<no_tasks;i++){
 		total_uti=taskset[i][0]/min(taskset[i][1],taskset[i][2]);
 		printf("Total Utilization for task %d\t%f\n",i,total_uti);
@@ -289,6 +303,11 @@ void eff_utilization_bound(float taskset[][3],int no_tasks){
 		total_uti+=uti_dead_k+uti_dead_j;
 		printf("Total Utilization for task %d\t%f\n",i,total_uti);
 		printf("Utilization  bound is:%f\n",bound);
+		if ((total_uti>bound)&&(total_uti<=1)){
+
+			time_demand(no_tasks,taskset_array);
+			
+		}
 		total_uti=uti_dead_j=uti_dead_k=0.0;
 		hn=h1=0;
 		printf("*********************************************************************************************************\n");
@@ -333,7 +352,7 @@ int time_demand(int no_tasks, float* taskset){
 		
 		prev_a += taskset[i];
 	}
-
+ 	
 	printf("a is %.3f\n", prev_a );
 
 	a = taskset[3*no_tasks - 3];
