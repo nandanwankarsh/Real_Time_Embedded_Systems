@@ -362,7 +362,7 @@ int utilization_bound(int no_tasks, float* taskset){
 	float u=0,bound=0;
 	int ret;
 	for (int i = 0; i < (3*no_tasks); i = i+3){
-		u += (taskset[i]/taskset[i+2]);
+		u += (taskset[i]/taskset[i+1]);
 	}
 
 	bound = no_tasks*(pow(2.0,(1.0/no_tasks)) - 1);
