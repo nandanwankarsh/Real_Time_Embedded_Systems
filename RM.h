@@ -11,13 +11,13 @@ void sort_rm(float taskset[][3],int no_tasks,int index);
 // void del(char str[], char ch);
 void swap(float *a,float *b);
 // void wrapper_rm(char* str_taskset,int no_tasks);
-void rm(char* taskset,int no_tasks);
+int rm(float taskset[][3],int no_tasks);
 int utilization_bound(int no_tasks, float* taskset);
 int time_demand(int no_tasks, float* taskset);
 float min(float a,float b);
-void eff_utilization_bound(float taskset[][3],int no_tasks);
+int eff_utilization_bound(float taskset[][3],int no_tasks);
 
-
+long sched_rm=0,non_sched_rm=0;
 
 void swap(float *a,float *b){
 	for(int i=0;i<3;i++){
@@ -64,17 +64,17 @@ void sort_rm(float taskset[][3],int no_tasks,int index){
 	
 
 
-	for (int i = 0; i < (no_tasks); i = i+1){
+	// for (int i = 0; i < (no_tasks); i = i+1){
 
-		for(int j=0;j< no_tasks;j++){
+	// 	for(int j=0;j< no_tasks;j++){
 
-				// if(taskset[j][index]<taskset[j+1][index])
-				// 	swap(taskset[j],taskset[j+1]);
+	// 			// if(taskset[j][index]<taskset[j+1][index])
+	// 			// 	swap(taskset[j],taskset[j+1]);
 
-			printf("%f\t",taskset[i][j]);
-		}
-		 printf("\n");
-	}
+	// 		printf("%f\t",taskset[i][j]);
+	// 	}
+	// 	 printf("\n");
+	// }
 
 	
 	for (int i = 0; i < (no_tasks); i = i+1){
@@ -88,18 +88,18 @@ void sort_rm(float taskset[][3],int no_tasks,int index){
 		}
 		// printf("\n");
 	}
-	printf("After sorting\n");
-	for (int i = 0; i < (no_tasks); i = i+1){
+	// printf("After sorting\n");
+	// for (int i = 0; i < (no_tasks); i = i+1){
 
-		for(int j=0;j< no_tasks;j++){
+	// 	for(int j=0;j< no_tasks;j++){
 
-				// if(taskset[j][index]<taskset[j+1][index])
-				// 	swap(taskset[j],taskset[j+1]);
+	// 			// if(taskset[j][index]<taskset[j+1][index])
+	// 			// 	swap(taskset[j],taskset[j+1]);
 
-			printf("%f\t",taskset[i][j]);
-		}
-		 printf("\n");
-	}
+	// 		printf("%f\t",taskset[i][j]);
+	// 	}
+	// 	 printf("\n");
+	// }
 
 
 
@@ -134,23 +134,25 @@ float min(float a,float b){
 		return b;
 }
 
-void rm(char* str_taskset,int no_tasks){
+int rm(float taskset_mat[][3],int no_tasks){
 
-	float taskset_mat[no_tasks][3],taskset[3*no_tasks];
-	char *token; 
+	// float taskset_mat[no_tasks][3];
+	// char *token; 
+	float taskset[no_tasks*3];
 	int count=0; 
-	printf("%s\n",str_taskset);  
-	token = strtok (str_taskset," ");
-	for (int i=0;i<no_tasks;i++){
-		for(int j=0;j<3;j++){
-			printf("Test Test RM %s \n",token);
-			// float f=atof(token); 
-			taskset_mat[i][j]=atof(token);
-			token = strtok (NULL, " ");
-			// printf("%f \t",taskset[i]);
-		}
-	}
-	printf("Test Test \n");
+	sched_rm=non_sched_rm=0;
+	//printf("%s\n",str_taskset);  
+	// token = strtok (str_taskset," ");
+	// for (int i=0;i<no_tasks;i++){
+	// 	for(int j=0;j<3;j++){
+	// 		printf("Test Test RM %s \n",token);
+	// 		// float f=atof(token); 
+	// 		taskset_mat[i][j]=atof(token);
+	// 		token = strtok (NULL, " ");
+	// 		// printf("%f \t",taskset[i]);
+	// 	}
+	// }
+	//printf("Test Test \n");
 	for (int i=0;i<no_tasks;i++){
 		for(int j=0;j<3;j++){
 
@@ -158,10 +160,10 @@ void rm(char* str_taskset,int no_tasks){
 			}
 		}
 
-	for(int i=0;i<3*no_tasks;i++){
+	// for(int i=0;i<3*no_tasks;i++){
 
-		printf("%f\t",taskset[i]);
-	}
+	// 	printf("%f\t",taskset[i]);
+	// }
 
 	for (int i = 0; i < (3*no_tasks); i = i+3){
 
@@ -173,7 +175,7 @@ void rm(char* str_taskset,int no_tasks){
 	// printf("%d\n",count);
 	if (count == no_tasks){
 
-		printf("Deadline is equal to period for the taskset\n");
+	//	printf("Deadline is equal to period for the taskset\n");
 
 		sort_rm(taskset_mat,no_tasks,2);
 
@@ -186,11 +188,15 @@ void rm(char* str_taskset,int no_tasks){
 		int u = utilization_bound(no_tasks ,taskset);
 		if (u == 0){
 			
-			printf("U is less than 1 so schedulable directly\n");
+			printf("U is less than 1 so sched_rmulable directly\n");
+			sched_rm=1;
+			non_sched_rm=0;
 		}
 		else if(u == 1){
 
-			printf("U is greater than 1 so not schedulable\n");
+			printf("U is greater than 1 so not sched_rmulable\n");
+			non_sched_rm=1;
+			sched_rm=0;
 		}
 		else{
 			printf("U is greater than utilization_bound and less than 1, so need to do time demand analysis\n");
@@ -205,13 +211,20 @@ void rm(char* str_taskset,int no_tasks){
 
 					if(td == 0){
 						printf("Task %d is schedulable after response time analysis\n\n", nt);
+						sched_rm=1;
+						non_sched_rm=0;
 					}
-					else
+					else{
 						printf("Task %d is not schedulable\n\n", nt);
+						non_sched_rm=1;
+						sched_rm=0;
+					}
 				}
 				else{
 
-					printf("Task %d is schedulable as U is under bound\n\n", nt );
+					printf("Task %d is sched_rmulable as U is under bound\n\n", nt );
+					sched_rm=1;
+					non_sched_rm=0;
 				}
 
 			}
@@ -221,13 +234,31 @@ void rm(char* str_taskset,int no_tasks){
 	else{
 		printf("Here the Deadline < period for the given taskset\n");
 		sort_rm(taskset_mat,no_tasks,2);
-		eff_utilization_bound(taskset_mat,no_tasks);
+		if(eff_utilization_bound(taskset_mat,no_tasks)>0){
+			sched_rm=1;
+			non_sched_rm=0;
+		}
+		else{
+			non_sched_rm=1;
+			sched_rm=0;
+		}
 
 	}
+
+	 printf("%lu ********************************* %lu\n",sched_rm,non_sched_rm);
+
+	if(sched_rm==1){
+
+		return 1;
+	}
+	else if(non_sched_rm==1)
+		return 0;
+
+
 }
 
 
-void eff_utilization_bound(float taskset[][3],int no_tasks){
+int eff_utilization_bound(float taskset[][3],int no_tasks){
 
 	float total_uti=0,uti_dead_j=0.0,uti_dead_k=0.0,bound=0.0;
 	int hn=0,h1=0;
@@ -246,7 +277,7 @@ void eff_utilization_bound(float taskset[][3],int no_tasks){
 	// }
 	for (int i=0;i<no_tasks;i++){
 		total_uti=taskset[i][0]/min(taskset[i][1],taskset[i][2]);
-		printf("Total Utilization for task %d\t%f\n",i,total_uti);
+		// printf("Total Utilization for task %d\t%f\n",i,total_uti);
 		for(int j=0;j<i;j++){
 
 				
@@ -263,24 +294,48 @@ void eff_utilization_bound(float taskset[][3],int no_tasks){
 				}
 			}
 		bound=(i+1-h1)*(pow(2.0,(1.0/(i+1-h1))) - 1);
-		printf("No. of tasks in Hn:%d\n",hn );
-		printf("No. of tasks in H1:%d\n",h1 );
-		printf("j Utilization for task %d\t%f\n",i,uti_dead_j );
-		printf("k Utilization for task %d\t%f\n",i,uti_dead_k );
+		// printf("No. of tasks in Hn:%d\n",hn );
+		// printf("No. of tasks in H1:%d\n",h1 );
+		// printf("j Utilization for task %d\t%f\n",i,uti_dead_j );
+		// printf("k Utilization for task %d\t%f\n",i,uti_dead_k );
 		total_uti+=uti_dead_k+uti_dead_j;
-		printf("Total Utilization for task %d\t%f\n",i,total_uti);
+		printf("Total Utilization for task %d\t%f\n",i+1,total_uti);
 		printf("Utilization  bound is:%f\n",bound);
 		if ((total_uti>bound)&&(total_uti<=1)){
+			printf("Requires response time analysis for task %d\n",i+1);
+			if(time_demand(no_tasks,taskset_array)==0){
+				sched_rm=1;
+				non_sched_rm=0;
+				printf("Response time analysis for task %d is done and it is schedulable\n",i+1 );
+			}
+			else{
+				non_sched_rm=1;
+				sched_rm=0;
+				printf("Response time analysis for task %d is done and it is not schedulable\n",i+1 );
+			}
 
-			time_demand(no_tasks,taskset_array);
 			
+		}
+		else if((total_uti>bound)&&(total_uti>1)){
+
+			non_sched_rm=1;
+			sched_rm=0;
+//			break;
+
 		}
 		total_uti=uti_dead_j=uti_dead_k=0.0;
 		hn=h1=0;
-		printf("*********************************************************************************************************\n");
+		// printf("*********************************************************************************************************\n");
 		}
 
-// return 
+
+		// if(non_sched_rm!=1)
+		// 	sched_rm=1;
+
+ if(non_sched_rm==1)
+ 	return 0;
+ else 
+ return 1; 
 
 }
 
@@ -320,7 +375,7 @@ int time_demand(int no_tasks, float* taskset){
 		prev_a += taskset[i];
 	}
  	
-	printf("a is %.3f\n", prev_a );
+	// printf("a is %.3f\n", prev_a );
 
 	a = taskset[3*no_tasks - 3];
 
@@ -331,7 +386,7 @@ int time_demand(int no_tasks, float* taskset){
 			a += (ceil(prev_a/taskset[i+2]))*taskset[i];
 			
 		}
-		printf("a is %.3f \n",a );
+		// printf("a is %.3f \n",a );
 		if(prev_a == a){
 			break;
 		}
@@ -355,7 +410,7 @@ int time_demand(int no_tasks, float* taskset){
 		}
 	}
 
-	printf("Max period is %.3f\n", max_period);
+	printf("Max period is %.3f and Work done is %f\n", max_period,a);
 
 	(a <= max_period) ? (ret = 0) : (ret = 1);
 
