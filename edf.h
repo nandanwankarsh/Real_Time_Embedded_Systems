@@ -7,54 +7,20 @@
 #include <errno.h>
 #include <math.h>
 
-// int num_tasks = 3;
-
-
-
-
 int check_utilization(int num_tasks, float* taskset);
 double busy_period(int num_tasks, float* taskset);
-// void del(char str[], char ch);
 int edf(float* taskset,int no_tasks);
 void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq);
 void merge(float arr[], int l, int m, int r);
 void mergeSort(float arr[], int l, int r);
 int removeDuplicates(float a[], int array_size);
+float uti_value;
 
-
-
-// void del(char str[], char ch) {
-// 	int i, j = 0;
-// 	int size;
-// 	char ch1;
-// 	char str1[30];
-
-// 	size = strlen(str);
-
-// 	for (i = 0; i < size; i++) {
-// 	  if (str[i] != ch) {
-// 	     ch1 = str[i];
-// 	     str1[j] = ch1;
-// 	     j++;
-// 	  }
-// 	}
-// 	str1[j] = '\0';
-// 	strcpy(str,str1); 
-// 	// printf("\ncorrected string is : %s \t %s", str1,str);
-// }
 
 int edf(float taskset[],int no_tasks){
-	long sched=0,non_sched=0;
-	//float taskset[3*no_tasks];
-	// char *token; 
+	long sched=0,non_sched=0; 
 	int count=0;   
-	// token = strtok (str_taskset," ");
-	// for (int i=0;i<3*no_tasks;i++){
-	// 	printf("Test Test %s \n",token);
-	// 	taskset[i]=atof(token);
-	// 	token = strtok (NULL, " ");
-	// 	printf("%f \t",taskset[i]);
-	// }
+	
 	printf("\n");
 	for (int i = 0; i < (3*no_tasks); i = i+3){
 
@@ -66,62 +32,65 @@ int edf(float taskset[],int no_tasks){
 
 	if (count == no_tasks){
 
+		printf("Deadline = period analysis\n");
 		int u = check_utilization(no_tasks ,taskset);
 		if (u == 0){
 			
-			 printf("U is less than 1 so schedulable directly\n");
+			 printf("Utilization is %f so schedulable after Utilization test\n", uti_value);
 			sched=1;
 			non_sched=0;
+
 		}
-		else
-			  printf("U is greater than 1 so not schedulable\n");
+		else{
+			  printf("Utilization is %f so not schedulable\n", uti_value);
 			non_sched=1;
 			sched=0;
+		}
 
 	}
 	else{
+
+		printf("Deadline < period analysis\n");
 
 		int j=0,count=0;
 		double t=0;
 		int u = check_utilization(no_tasks ,taskset);
 		if (u == 0){
 			
-			 printf("U is less than 1 so schedulable after Utilization test\n");
+			 printf("Utilization %f so schedulable after Utilization test\n", uti_value);
 			sched=1;
 			non_sched=0;
 		}
 		else{
-			 printf("U is greater than 1 so need to do loading factor analysis\n");
+			 printf("Utilization %f so need to do loading factor analysis\n", uti_value);
 
 			double L = busy_period(no_tasks ,taskset);
 
 			  printf("The busy_period is %lf \n", L);        
 
 			while(t < L){
-				int i = 0;
-				for (i ; i < (3*no_tasks); i = i+3){
-					
+				for (int i = 0 ; i < (3*no_tasks); i = i+3){
+
+
 
 					if(t >= L)
 						break;
 					else{
 						t = taskset[i+1] + j*taskset[i+2];
-						   printf("Value of t is %f\n", t);
-						// t[count]=t;
+						   
 						count ++;
 					}
 				}
 
 				j++;
 			} 
-			// printf("here here\n");
+			
 			float t_array[count-1];
 			j=count=t=0;
 
 
 			while(t < L){
-				int i = 0;
-				for (i ; i < (3*no_tasks); i = i+3){
+				for (int i = 0; i < (3*no_tasks); i = i+3){
 					
 
 					if(t >= L)
@@ -139,44 +108,24 @@ int edf(float taskset[],int no_tasks){
 
 				j++;
 			} 
-			// for(int i=0;i<count;i++){
 
-			// 	printf("%f\t",t_array[i]);
-
-			// }
 			mergeSort(t_array,0,count-1);
-			// for(int i=0;i<count;i++){
 
-			// 	printf("%f\t",t_array[i]);
-
-			// }
 			int count_unq=0;
-			// printf("\n");
 			count_unq=removeDuplicates(t_array,count);
-			// printf("No. of unique elements %d\n",count_unq);
 			float load_mat[count_unq][3];
+
 			for(int i=0;i<=count_unq;i++){
 
 				load_mat[i][0]=t_array[i];
-				  // printf("%f\t",load_mat[i][0]);
-
 			}
 			
 
 			calculate_proc_demand(load_mat,taskset,t,no_tasks,count_unq);
 
+			printf("    t\t    |\t   h\t    |\t   u\n");
+
 			for(int i=0;i<count_unq;i++){
-
-				if(load_mat[i][2]>1){
-
-					non_sched=1;
-					sched=0;
-					// break;
-				}
-
-			}
-
-			for(int i=0;i<count;i++){
 
 				for(int j=0;j<3;j++){
 
@@ -184,31 +133,50 @@ int edf(float taskset[],int no_tasks){
 				}
 				printf("\n");
 			}
-			 printf("Value of t's count is %d\n", count);
 
-		}
+			int k=0,l=0;
 
-		if(sched==1){
+			for(int i=0;i<count_unq;i++){
 
-			printf("Task is Schedulable after Loading factor analysis\n");
+				if(load_mat[i][2]>1){
+
+					k = 1;
+
+					if ((k==1)&&(l==0)){
+						printf("\nThe first missing Deadline is %f \n", load_mat[i][0]);
+
+						l = 1; 
+
+					}
+
+
+					non_sched=1;
+					sched=0;
+					
+				}
+
+			}
+
+			 if(sched==1){
+
+				printf("Task is Schedulable after Loading factor analysis\n");
 	
-		}
-		else if(non_sched==1){
-			printf("Task is Non Schedulable after loading factor analysis\n");
+			}
+			else if(non_sched==1){
+				printf("Task is Non Schedulable after loading factor analysis\n");
 		
+			}
+
 		}
 
-
-		// printf("Reached end EDF !!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 	}
 
 	if(sched==1){
 
-			// printf("Task is Schedulable after Loading factor analysis\n");
 			return 1;
 		}
-		else if(non_sched==1){
-			// printf("Task is Non Schedulable after loading factor analysis\n");
+		else{
+
 			return 0;
 		}
 
@@ -218,13 +186,6 @@ int removeDuplicates(float a[], int array_size)
    int i, j;
  
    j = 0;
- 
-   // Print old array...
- // ? printf("\n\nOLD : ");
-   // for(i = 0; i < array_size; i++)
-   // {
-   //    printf("%f ", a[i]);
-   // }
  
    // Remove the duplicates ...
    for (i = 1; i < array_size; i++)
@@ -239,14 +200,6 @@ int removeDuplicates(float a[], int array_size)
    // The new array size..
    array_size = (j + 1);
  
-   // Print new array...
-   // printf("\nNEW : ");
-   // for(i = 0; i< array_size; i++)
-   // {
-   //    printf("[%f] ", a[i]);
-   // }
-   // printf("\n\n");
- 
    // Return the new size...
    return(j + 1);
  }
@@ -256,7 +209,7 @@ void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,i
 
 	float sum_dead;
 	int index=0;
-	// printf("Busy Val is %f\n", busy_val);
+
 	while(index<count_unq && table[index][0]<=busy_val){
 
 		for(int i=0;i<num_lines;i++){
@@ -270,29 +223,12 @@ void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,i
 
 		table[index][1]=sum_dead;
 		table[index][2]=table[index][1]/table[index][0];
-		// printf("Index is %f\t%f\n", table[index][0],table[index][1]);
-		// printf("Index is %f\t %d\n", sum_dead,index);
+
 		if (table[index][0]>busy_val)
 			break;
 		index++;
 
 	}
-	 // printf("Index is %d\n", index);
-
-		// for(int i=0;i<index;i++){
-
-		// 		for(int j=0;j<3;j++){
-
-		// 			printf("%f\t",table[i][j] );
-		// 		}
-		// 		printf("\n");
-		// 	}
-			  // printf("Value of t's count is %d\n", count);
-
-
-
-
-
 
 }
 
@@ -306,8 +242,7 @@ double busy_period(int num_tasks, float* taskset){
 		
 		prev_L += taskset[i];
 	}
-	// printf("prev_L is %d \n",prev_L );
-	
+
 	while(1){
 
 		for (int i = 0; i < 3*(num_tasks); i = i+3){
@@ -315,7 +250,7 @@ double busy_period(int num_tasks, float* taskset){
 			L += (ceil(prev_L/taskset[i+2]))*taskset[i];
 			
 		}
-		// printf("L is %d \n",L );
+	
 		if(prev_L == L){
 			break;
 		}
@@ -336,6 +271,8 @@ int check_utilization(int num_tasks, float* taskset){
 	for (int i = 0; i < (3*num_tasks); i = i+3){
 		u += (taskset[i]/taskset[i+1]);
 	}
+
+	uti_value = u;
 
 	if (u <= 1){
 		ret = 0;

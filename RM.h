@@ -29,34 +29,6 @@ void swap(float *a,float *b){
 
 }
 
-// void wrapper_rm(char* str_taskset,int no_tasks){
-
-// 	float taskset_mat[no_tasks][3],taskset[3*no_tasks];
-// 	char *token; 
-// 	int count=0;   
-// 	token = strtok (str_taskset," ");
-// 	for (int i=0;i<no_tasks;i++){
-// 		for(int j=0;j<3;j++){
-// 			taskset_mat[i][j]=atof(token);
-// 			token = strtok (NULL, " ");
-// 		//	printf("%f \t",taskset[i]);
-// 		}
-// 	}
-// 	sort_rm(taskset_mat,no_tasks,1);
-
-// 	for (int i=0;i<no_tasks;i++){
-// 		for(int j=0;j<3;j++){
-
-// 			taskset[i*3+j]=taskset_mat[i][j];
-// 		}
-// 	}
-
-// 	for(int i=0;i<3*no_tasks;i++){
-
-// 		printf("%f\t",taskset[i]);
-// 	}
-
-// }
 
 
 void sort_rm(float taskset[][3],int no_tasks,int index){
@@ -188,13 +160,13 @@ int rm(float taskset_mat[][3],int no_tasks){
 		int u = utilization_bound(no_tasks ,taskset);
 		if (u == 0){
 			
-			printf("U is less than 1 so sched_rmulable directly\n");
+			printf("U is less than 1 so schedulable directly\n");
 			sched_rm=1;
 			non_sched_rm=0;
 		}
 		else if(u == 1){
 
-			printf("U is greater than 1 so not sched_rmulable\n");
+			printf("U is greater than 1 so not schedulable\n");
 			non_sched_rm=1;
 			sched_rm=0;
 		}
@@ -222,7 +194,7 @@ int rm(float taskset_mat[][3],int no_tasks){
 				}
 				else{
 
-					printf("Task %d is sched_rmulable as U is under bound\n\n", nt );
+					printf("Task %d is schedulable as U is under bound\n\n", nt );
 					sched_rm=1;
 					non_sched_rm=0;
 				}
@@ -245,13 +217,13 @@ int rm(float taskset_mat[][3],int no_tasks){
 
 	}
 
-	 printf("%lu ********************************* %lu\n",sched_rm,non_sched_rm);
+	 // printf("%lu ********************************* %lu\n",sched_rm,non_sched_rm);
 
 	if(sched_rm==1){
 
 		return 1;
 	}
-	else if(non_sched_rm==1)
+	else
 		return 0;
 
 
@@ -294,10 +266,6 @@ int eff_utilization_bound(float taskset[][3],int no_tasks){
 				}
 			}
 		bound=(i+1-h1)*(pow(2.0,(1.0/(i+1-h1))) - 1);
-		// printf("No. of tasks in Hn:%d\n",hn );
-		// printf("No. of tasks in H1:%d\n",h1 );
-		// printf("j Utilization for task %d\t%f\n",i,uti_dead_j );
-		// printf("k Utilization for task %d\t%f\n",i,uti_dead_k );
 		total_uti+=uti_dead_k+uti_dead_j;
 		printf("Total Utilization for task %d\t%f\n",i+1,total_uti);
 		printf("Utilization  bound is:%f\n",bound);
@@ -320,7 +288,6 @@ int eff_utilization_bound(float taskset[][3],int no_tasks){
 
 			non_sched_rm=1;
 			sched_rm=0;
-//			break;
 
 		}
 		total_uti=uti_dead_j=uti_dead_k=0.0;
@@ -335,7 +302,7 @@ int eff_utilization_bound(float taskset[][3],int no_tasks){
  if(non_sched_rm==1)
  	return 0;
  else 
- return 1; 
+ 	return 1; 
 
 }
 
@@ -410,7 +377,7 @@ int time_demand(int no_tasks, float* taskset){
 		}
 	}
 
-	printf("Max period is %.3f and Work done is %f\n", max_period,a);
+	printf("Deadline for the task is %.3f and Work done is %f\n", max_period,a);
 
 	(a <= max_period) ? (ret = 0) : (ret = 1);
 
