@@ -27,7 +27,7 @@ int main(){
 	char line1[30];
 	char *line1_str[2],*str_woeol;
 	int num_lines,num_taskset;
-
+	char *token; 
 	if ((fp=fopen("input.txt","r")) == NULL)
 		printf("Cannot open file\n");
 
@@ -46,18 +46,50 @@ int main(){
 		for (int i = 0; i < num_lines; i++){
 			fgets(line[i], sizeof(line[i]), fp);
 			del(line[i],'\n');
+			del(line[i],'\0');
 			strcat(line[i]," ");
 			// printf("%s\n", line[i]);
 			strcat(holder,line[i]);
 			// printf("%s\n", line[i]);
 		}
+		float taskset[3*num_lines];
+		token = strtok (holder," ");
+		for (int i=0;i<3*num_lines;i++){
+			// printf("Test Test %s \n",token);
+			taskset[i]=atof(token);
+			token = strtok (NULL, " ");
+			// printf("%f\n",taskset[i]);
+		}
+		float taskset_mat[num_lines][3];
+		for (int i=0;i<num_lines;i++){
+			for(int j=0;j<3;j++){
+
+					// taskset[i*3+j]=taskset_mat[i][j];
+					taskset_mat[i][j]=taskset[i*3+j];
+				}
+		}
+
+
+
 		// printf("%s\n", holder);
-		printf("EDF for task %d *************************************************\n",j);
-		edf(holder,num_lines);
-		printf("Rate Monotonic for task %d *************************************************\n",j);
-		rm(holder,num_lines);
-		// printf("Deadline Monotonic for task %d *************************************************\n",j);
-		// dm(holder,num_lines);
+		printf("***************************************************EDF for task %d *************************************************\n",j+1);
+		if(edf(taskset,num_lines)>0){
+			printf("taskset is schedulable\n");
+
+		}
+		else
+			printf("taskset is non schedulable\n");
+		// printf("**********************************************Rate Monotonic for task %d *************************************************\n",j+1);
+		// if(rm(taskset_mat,num_lines)>0){
+
+		// 	printf("taskset is schedulable using RM\n");
+		// }
+		// else{
+
+		// 	printf("taskset is not schedulable using RM\n");
+		// }
+		// printf("*********************************************Deadline Monotonic for task %d *************************************************\n",j+1);
+		// dm(taskset_mat,num_lines);
 
 
 		printf("\n");
