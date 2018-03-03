@@ -9,10 +9,13 @@
 
 // int num_tasks = 3;
 
+
+
+
 int check_utilization(int num_tasks, float* taskset);
 double busy_period(int num_tasks, float* taskset);
 // void del(char str[], char ch);
-void edf(char* taskset,int no_tasks);
+int edf(float* taskset,int no_tasks);
 void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,int num_lines,int count_unq);
 void merge(float arr[], int l, int m, int r);
 void mergeSort(float arr[], int l, int r);
@@ -40,18 +43,18 @@ int removeDuplicates(float a[], int array_size);
 // 	// printf("\ncorrected string is : %s \t %s", str1,str);
 // }
 
-void edf(char* str_taskset,int no_tasks){
-	
-	float taskset[3*no_tasks];
-	char *token; 
+int edf(float taskset[],int no_tasks){
+	long sched=0,non_sched=0;
+	//float taskset[3*no_tasks];
+	// char *token; 
 	int count=0;   
-	token = strtok (str_taskset," ");
-	for (int i=0;i<3*no_tasks;i++){
-		printf("Test Test %s \n",token);
-		taskset[i]=atof(token);
-		token = strtok (NULL, " ");
-		printf("%f \t",taskset[i]);
-	}
+	// token = strtok (str_taskset," ");
+	// for (int i=0;i<3*no_tasks;i++){
+	// 	printf("Test Test %s \n",token);
+	// 	taskset[i]=atof(token);
+	// 	token = strtok (NULL, " ");
+	// 	printf("%f \t",taskset[i]);
+	// }
 	printf("\n");
 	for (int i = 0; i < (3*no_tasks); i = i+3){
 
@@ -66,10 +69,14 @@ void edf(char* str_taskset,int no_tasks){
 		int u = check_utilization(no_tasks ,taskset);
 		if (u == 0){
 			
-			printf("U is less than 1 so schedulable directly\n");
+			 printf("U is less than 1 so schedulable directly\n");
+			sched=1;
+			non_sched=0;
 		}
 		else
-			printf("U is greater than 1 so not schedulable\n");
+			  printf("U is greater than 1 so not schedulable\n");
+			non_sched=1;
+			sched=0;
 
 	}
 	else{
@@ -79,14 +86,16 @@ void edf(char* str_taskset,int no_tasks){
 		int u = check_utilization(no_tasks ,taskset);
 		if (u == 0){
 			
-			printf("U is less than 1 so schedulable\n");
+			 printf("U is less than 1 so schedulable after Utilization test\n");
+			sched=1;
+			non_sched=0;
 		}
 		else{
-			printf("U is greater than 1 so need to do loading factor analysis\n");
+			 printf("U is greater than 1 so need to do loading factor analysis\n");
 
 			double L = busy_period(no_tasks ,taskset);
 
-			 printf("The busy_period is %lf \n", L);        
+			  printf("The busy_period is %lf \n", L);        
 
 			while(t < L){
 				int i = 0;
@@ -97,7 +106,7 @@ void edf(char* str_taskset,int no_tasks){
 						break;
 					else{
 						t = taskset[i+1] + j*taskset[i+2];
-						  printf("Value of t is %f\n", t);
+						   printf("Value of t is %f\n", t);
 						// t[count]=t;
 						count ++;
 					}
@@ -105,7 +114,7 @@ void edf(char* str_taskset,int no_tasks){
 
 				j++;
 			} 
-			printf("here here\n");
+			// printf("here here\n");
 			float t_array[count-1];
 			j=count=t=0;
 
@@ -119,7 +128,7 @@ void edf(char* str_taskset,int no_tasks){
 						break;
 					else{
 						t= taskset[i+1] + j*taskset[i+2];
-						printf("Value of t is %lf\n", t);
+						// printf("Value of t is %lf\n", t);
 						
 						if(t<=L){
 							count ++;
@@ -130,48 +139,78 @@ void edf(char* str_taskset,int no_tasks){
 
 				j++;
 			} 
-			for(int i=0;i<count;i++){
+			// for(int i=0;i<count;i++){
 
-				printf("%f\t",t_array[i]);
+			// 	printf("%f\t",t_array[i]);
 
-			}
+			// }
 			mergeSort(t_array,0,count-1);
-			for(int i=0;i<count;i++){
+			// for(int i=0;i<count;i++){
 
-				printf("%f\t",t_array[i]);
+			// 	printf("%f\t",t_array[i]);
 
-			}
+			// }
 			int count_unq=0;
-			printf("\n");
+			// printf("\n");
 			count_unq=removeDuplicates(t_array,count);
-			printf("No. of unique elements %d\n",count_unq);
+			// printf("No. of unique elements %d\n",count_unq);
 			float load_mat[count_unq][3];
-			for(int i=0;i<count_unq;i++){
+			for(int i=0;i<=count_unq;i++){
 
 				load_mat[i][0]=t_array[i];
-				printf("%f\t",load_mat[i][0]);
+				  // printf("%f\t",load_mat[i][0]);
 
 			}
 			
 
 			calculate_proc_demand(load_mat,taskset,t,no_tasks,count_unq);
-			// for(int i=0;i<count-1;i++){
 
-			// 	for(int j=0;j<3;j++){
+			for(int i=0;i<count_unq;i++){
 
-			// 		printf("%f\t",load_mat[i][j] );
-			// 	}
-			// 	printf("\n");
-			// }
-			 // printf("Value of t's count is %d\n", count);
+				if(load_mat[i][2]>1){
+
+					non_sched=1;
+					sched=0;
+					// break;
+				}
+
+			}
+
+			for(int i=0;i<count;i++){
+
+				for(int j=0;j<3;j++){
+
+					printf("%f\t",load_mat[i][j] );
+				}
+				printf("\n");
+			}
+			 printf("Value of t's count is %d\n", count);
 
 		}
 
-		printf("Reached end EDF !!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		if(sched==1){
+
+			printf("Task is Schedulable after Loading factor analysis\n");
+	
+		}
+		else if(non_sched==1){
+			printf("Task is Non Schedulable after loading factor analysis\n");
+		
+		}
+
+
+		// printf("Reached end EDF !!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 	}
 
-	
+	if(sched==1){
 
+			// printf("Task is Schedulable after Loading factor analysis\n");
+			return 1;
+		}
+		else if(non_sched==1){
+			// printf("Task is Non Schedulable after loading factor analysis\n");
+			return 0;
+		}
 
 }
 int removeDuplicates(float a[], int array_size)
@@ -181,7 +220,7 @@ int removeDuplicates(float a[], int array_size)
    j = 0;
  
    // Print old array...
-   printf("\n\nOLD : ");
+ // ? printf("\n\nOLD : ");
    // for(i = 0; i < array_size; i++)
    // {
    //    printf("%f ", a[i]);
@@ -233,21 +272,21 @@ void calculate_proc_demand(float table[][3],float taskset_ref[],float busy_val,i
 		table[index][2]=table[index][1]/table[index][0];
 		// printf("Index is %f\t%f\n", table[index][0],table[index][1]);
 		// printf("Index is %f\t %d\n", sum_dead,index);
-		if (table[index][0]>=busy_val)
+		if (table[index][0]>busy_val)
 			break;
 		index++;
 
 	}
-	 printf("Index is %d\n", index);
+	 // printf("Index is %d\n", index);
 
-		for(int i=0;i<index;i++){
+		// for(int i=0;i<index;i++){
 
-				for(int j=0;j<3;j++){
+		// 		for(int j=0;j<3;j++){
 
-					printf("%f\t",table[i][j] );
-				}
-				printf("\n");
-			}
+		// 			printf("%f\t",table[i][j] );
+		// 		}
+		// 		printf("\n");
+		// 	}
 			  // printf("Value of t's count is %d\n", count);
 
 
